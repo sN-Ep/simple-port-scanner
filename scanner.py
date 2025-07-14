@@ -18,9 +18,9 @@ def from_cli():
         parser.add_argument('--threads', type=int, default=1, help="Number of threads")
         parser.add_argument('--verbose', action='store_true', help="show attempted ports")
         parser.add_argument('--no-banner', action='store_true', help='Banner Print or Not')
-
+        parser.add_argument('--timeout', default=None, help='Time out for Socket Connection')
         args = parser.parse_args()
-        mytarget = Target(host=args.host,port=args.ports,thread=args.threads,verbose=args.verbose)
+        mytarget = Target(host=args.host,port=args.ports,thread=args.threads,verbose=args.verbose,timeout=args.timeout)
         if not args.no_banner:
            Banner()
         mytarget.scan()
@@ -37,13 +37,14 @@ def timed(func):
         print(f"{colr.GREEN}[End time]:{colr.END}{endti-start:.2f}")
     return wrapper
 
-def run(host,verbose):
+def run(host,verbose,timeout):
     while not toscanned.empty():
         port = toscanned.get()
         if verbose:
           print(f"{colr.GREEN}[*]{colr.END}Attempt:{port}")
         soc = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
-        #soc.settimeout(1)
+        if timeout != None:
+            socket.setdefaulttimeout(int(timeout))
         try:
                soc.connect((host,port))
                try:
@@ -54,6 +55,9 @@ def run(host,verbose):
         except ConnectionRefusedError:
                 #print(f"tying..{port}")
                 pass
+        except OSError:
+            print(f"{colr.RED}Network Error Pleace Chech Network{colr.END}")
+            sys.exit(1)
         finally:
                 soc.close()
 class Banner:
@@ -72,11 +76,12 @@ class Banner:
          print(f"{colr.YELLOW}|  \_/\_/  |{colr.END}---------------------------------------|\n\n")
           
 class Target:
-    def __init__(self,host="127.0.0.1",port=None,thread=1,verbose=False):
+    def __init__(self,host="127.0.0.1",port=None,thread=1,verbose=False,timeout=None):
         self.host = host
         self.port = port
         self.thread = thread
         self.verbose = verbose
+        self.timeout = timeout
         if "-" in self.port:
           try:
             splited = self.port.split("-")
@@ -101,7 +106,7 @@ class Target:
     def scan(self):
         tl = []
         for _ in range(1,self.thread+1):
-            th = threading.Thread(target=run,args=(self.host,self.verbose))
+            th = threading.Thread(target=run,args=(self.host,self.verbose,self.timeout))
             tl.append(th)
             th.start()
         for t in tl:
