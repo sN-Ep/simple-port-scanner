@@ -72,7 +72,7 @@ class Banner:
          print("")
          print(f"{colr.YELLOW}|__      __|{colr.END}---------------------------------------|")
          print(f"{colr.YELLOW}|\ \ /\ / /|{colr.END} This tool is for educational use only |")
-         print(f"{colr.YELLOW}| \ V  V / |{colr.END}---------Tool By: {colr.BOLD}sNEp{colr.END}--------------|")
+         print(f"{colr.YELLOW}| \ V  V / |{colr.END}---------Tool By: {colr.BOLD}sNEp{colr.END}-----------------|")
          print(f"{colr.YELLOW}|  \_/\_/  |{colr.END}---------------------------------------|\n\n")
           
 class Target:
