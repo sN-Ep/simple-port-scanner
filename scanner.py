@@ -2,12 +2,12 @@ import socket
 import time
 import threading
 import queue
-from colors import colr # This is My Own Module For Color Output
+from colors import colr 
 import argparse
 import sys
 
 toscanned = queue.Queue()
-SERVICE = "Unknow" # Msg To Display Unknown Service
+SERVICE = "UNKNOWN SERVICE"
 
 # To Use CLI Tool Like Hacker😀️
 def from_cli():
