@@ -43,7 +43,7 @@ def run(host,verbose):
         if verbose:
           print(f"{colr.GREEN}[*]{colr.END}Attempt:{port}")
         soc = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
-        soc.settimeout(1)
+        #soc.settimeout(1)
         try:
                soc.connect((host,port))
                try:
@@ -68,7 +68,7 @@ class Banner:
          print("")
          print(f"{colr.YELLOW}|__      __|{colr.END}---------------------------------------|")
          print(f"{colr.YELLOW}|\ \ /\ / /|{colr.END} This tool is for educational use only |")
-         print(f"{colr.YELLOW}| \ V  V / |{colr.END}---------Tool By: {colr.BOLD}saNDEep{colr.END}--------------|")
+         print(f"{colr.YELLOW}| \ V  V / |{colr.END}---------Tool By: {colr.BOLD}sNEp{colr.END}--------------|")
          print(f"{colr.YELLOW}|  \_/\_/  |{colr.END}---------------------------------------|\n\n")
           
 class Target:
