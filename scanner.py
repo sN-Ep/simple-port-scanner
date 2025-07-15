@@ -1,3 +1,4 @@
+import subprocess
 import socket
 import time
 import threading
@@ -19,8 +20,9 @@ def from_cli():
         parser.add_argument('--verbose', action='store_true', help="show attempted ports")
         parser.add_argument('--no-banner', action='store_true', help='Banner Print or Not')
         parser.add_argument('--timeout', default=None, help='Time out for Socket Connection')
+        parser.add_argument('--dump', action='store_true', help='Save Result to file')
         args = parser.parse_args()
-        mytarget = Target(host=args.host,port=args.ports,thread=args.threads,verbose=args.verbose,timeout=args.timeout)
+        mytarget = Target(host=args.host,port=args.ports,thread=args.threads,verbose=args.verbose,timeout=args.timeout,dump=args.dump)
         if not args.no_banner:
            Banner()
         mytarget.scan()
@@ -37,7 +39,12 @@ def timed(func):
         print(f"{colr.GREEN}[End time]:{colr.END}{endti-start:.2f}")
     return wrapper
 
-def run(host,verbose,timeout):
+def run(host,verbose,timeout,dump):
+    port_pool = []
+    test_host = subprocess.run(['ping','-c','3',f'{host}'],stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL)
+    if test_host.returncode != 0:
+        print(f"{colr.RED}Can't find Host{colr.END}:{host}")
+        sys.exit(1)
     while not toscanned.empty():
         port = toscanned.get()
         if verbose:
@@ -51,33 +58,35 @@ def run(host,verbose,timeout):
                   service = socket.getservbyport(port)
                except OSError:
                   service = SERVICE
+               if dump:
+                   port_pool.append(f"{port} | {service}\n")
                print(f"{colr.BLUE}{host}{colr.END} | {colr.RED}{port}{colr.END} | {colr.BLUE}{service}{colr.END}")
         except ConnectionRefusedError:
                 #print(f"tying..{port}")
-                pass
-        except OSError:
-            print(f"{colr.RED}Network Error Pleace Chech Network{colr.END}")
-            sys.exit(1)
+                pass 
         finally:
                 soc.close()
+    if dump:
+        with open(f"Scan_Report({host}).txt","w") as file:
+            for res in port_pool:
+                file.write(res)
 class Banner:
     def __init__(self):
-         print(f"{colr.BOLD}{colr.BLUE} _____           _       ______{colr.END}")
-         print(f"{colr.BOLD}{colr.BLUE}|  __ \         | |     |___  /{colr.END}")
-         print(f"{colr.BOLD}{colr.BLUE}| |__) |__  _ __| |_ ____  / / {colr.END}")
-         print(f"{colr.BOLD}{colr.BLUE}|  ___/ _ \| '__| __|_  / / /  {colr.END}")
-         print(f"{colr.BOLD}{colr.BLUE}| |  | (_) | |  | |_ / / / /__ {colr.END}")
-         print(f"{colr.BOLD}{colr.BLUE}|_|   \___/|_|   \__/___/_____|{colr.END}")
-         print(f"-------{colr.GREEN}Simple &{colr.END} {colr.RED}Powerful{colr.END}-------")
-         print("")
-         print(f"{colr.YELLOW}|__      __|{colr.END}---------------------------------------|")
-         print(f"{colr.YELLOW}|\ \ /\ / /|{colr.END} This tool is for educational use only |")
-         print(f"{colr.YELLOW}| \ V  V / |{colr.END}---------Tool By: {colr.BOLD}sNEp{colr.END}-----------------|")
-         print(f"{colr.YELLOW}|  \_/\_/  |{colr.END}---------------------------------------|\n\n")
-          
+         try:
+              with open("ascii.txt","r") as f:
+                  banner = f.read()
+              banner.replace("%RED%",f"{colr.RED}").replace("%END%",f"{colr.END}")
+              print(f"{banner}\n\n")
+         except FileNotFoundError:
+              print("")
+              print("     ____)==/______,_")
+              print(f"{colr.BLUE}zZ{colr.END}  /__.-^-|_|''`")
+              print(f"{colr.BOLD}-------------------------------------{colr.END}By:{colr.RED}sNEp{colr.END}{colr.BOLD}-------{colr.END}")
+              print(f"{colr.GREEN}Full Banner Can't Find! By The Way This Also Cool{colr.END}\n\n")
 class Target:
-    def __init__(self,host="127.0.0.1",port=None,thread=1,verbose=False,timeout=None):
+    def __init__(self,host="127.0.0.1",port=None,thread=1,verbose=False,timeout=None,dump=False):
         self.host = host
+        self.dump = dump
         self.port = port
         self.thread = thread
         self.verbose = verbose
@@ -106,7 +115,7 @@ class Target:
     def scan(self):
         tl = []
         for _ in range(1,self.thread+1):
-            th = threading.Thread(target=run,args=(self.host,self.verbose,self.timeout))
+            th = threading.Thread(target=run,args=(self.host,self.verbose,self.timeout,self.dump))
             tl.append(th)
             th.start()
         for t in tl:
